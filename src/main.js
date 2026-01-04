@@ -22,6 +22,7 @@ let applyFiltering;
 let applySorting;
 let applyPagination;
 let updatePagination;
+let updateIndexes;
 
 /**
  * Сбор и обработка полей из таблицы
@@ -48,9 +49,9 @@ async function render(action) {
     let state = collectState(); // состояние полей из таблицы
     let query = {}; // здесь будут формироваться параметры запроса
     // другие apply*
-    // result = applySearching(result, state, action);
-    // result = applyFiltering(result, state, action);
-    // result = applySorting(result, state, action);
+    query = applySearching(query, state, action); // result заменяем на query
+    query = applyFiltering(query, state, action); // result заменяем на query
+    query = applySorting(query, state, action); // result заменяем на query
     query = applyPagination(query, state, action); // обновляем query
 
     const { total, items } = await api.getRecords(query); // запрашиваем данные с собранными параметрами
@@ -71,8 +72,12 @@ async function init() {
 
     applySearching = initSearching('search');
 
-    applyFiltering = initFiltering(sampleTable.filter.elements, {    // передаём элементы фильтра
-        searchBySeller: indexes.sellers                                    // для элемента с именем searchBySeller устанавливаем массив продавцов
+    const filtering = initFiltering(sampleTable.filter.elements);
+    applyFiltering = filtering.applyFiltering;
+    updateIndexes = filtering.updateIndexes;
+
+    updateIndexes(sampleTable.filter.elements, {
+        searchBySeller: indexes.sellers
     });
 
     applySorting = initSorting([        // Нам нужно передать сюда массив элементов, которые вызывают сортировку, чтобы изменять их визуальное представление
