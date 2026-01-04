@@ -5,10 +5,29 @@ export const initPagination = ({pages, fromRow, toRow, totalRows}, createPage) =
     pages.firstElementChild.remove();                                // и удаляем его (предполагаем, что там больше ничего, как вариант, можно и всё удалить из pages)
 
     let pageCount;
+    let previousSearch = '';
+    let previousFilter = {};
 
     const applyPagination = (query, state, action) => {
         const limit = state.rowsPerPage;
         let page = state.page;
+
+        // Если происходит поиск (изменение значения поиска), сбрасываем пагинацию на 1 страницу
+        const currentSearch = query.search || '';
+        if (currentSearch !== previousSearch && page > 1) {
+            page = 1;
+        }
+        previousSearch = currentSearch;
+
+        // Если происходит фильтрация (изменение фильтров), сбрасываем пагинацию на 1 страницу
+        const currentFilter = Object.keys(query).filter(key => key.startsWith('filter[')).reduce((acc, key) => {
+            acc[key] = query[key];
+            return acc;
+        }, {});
+        if (JSON.stringify(currentFilter) !== JSON.stringify(previousFilter) && page > 1) {
+            page = 1;
+        }
+        previousFilter = currentFilter;
 
         if (action) switch(action.name) {
             case 'prev': page = Math.max(1, page - 1); break;            // переход на предыдущую страницу
